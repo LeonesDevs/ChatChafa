@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ChatChafa</title>
+
+     <link rel="icon" href="/favicon.ico">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #111;
+            color: #ddd;
+            font-family: monospace;
+        }
+
+        /* =========================
+           Identity screen
+           ========================= */
+
+        #identity-screen {
+            width: 90%;
+            max-width: 500px;
+            margin: 120px auto;
+            text-align: center;
+        }
+
+        #identity-screen h1 {
+            color: #5cff5c;
+            margin-bottom: 10px;
+        }
+
+        #identity-screen p {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .identity-box {
+            border: 1px solid #555;
+            background: #181818;
+            padding: 30px;
+        }
+
+        .identity-box label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            color: #aaa;
+        }
+
+        #username {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+
+            background: #222;
+            color: #ddd;
+
+            border: 1px solid #555;
+
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        #username:focus {
+            outline: none;
+            border-color: #5cff5c;
+        }
+
+        #name-color {
+            width: 100%;
+            height: 45px;
+
+            background: #222;
+            border: 1px solid #555;
+
+            cursor: pointer;
+
+            margin-bottom: 25px;
+        }
+
+        #enter-chat {
+            width: 100%;
+
+            padding: 12px;
+
+            background: #222;
+            color: #5cff5c;
+
+            border: 1px solid #5cff5c;
+
+            font-family: monospace;
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+        #enter-chat:hover {
+            background: #5cff5c;
+            color: #111;
+        }
+
+
+        /* =========================
+           Chat
+           ========================= */
+
+        #chat-screen {
+            display: none;
+
+            width: 90%;
+            max-width: 900px;
+
+            margin: 40px auto;
+        }
+
+        #chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
+        #chat-header h1 {
+            margin: 0;
+            color: #5cff5c;
+        }
+
+        #identity-display {
+            color: #888;
+        }
+
+        #chat {
+            height: 500px;
+
+            border: 1px solid #555;
+
+            background: #181818;
+
+            padding: 15px;
+
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .username {
+            font-weight: bold;
+        }
+
+        .input-area {
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 10px;
+        }
+
+        #message {
+            flex: 1;
+
+            padding: 12px;
+
+            background: #222;
+            color: #ddd;
+
+            border: 1px solid #555;
+
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        #message:focus {
+            outline: none;
+            border-color: #5cff5c;
+        }
+
+        #send {
+            padding: 12px 20px;
+
+            background: #222;
+            color: #5cff5c;
+
+            border: 1px solid #5cff5c;
+
+            font-family: monospace;
+
+            cursor: pointer;
+        }
+
+        #send:hover {
+            background: #5cff5c;
+            color: #111;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         Identity screen
+         ========================= -->
+
+    <div id="identity-screen">
+
+        <h1>ChatChafa</h1>
+
+        <p>Choose your identity</p>
+
+        <div class="identity-box">
+
+            <label for="username">
+                Name
+            </label>
+
+            <input
+                id="username"
+                type="text"
+                maxlength="20"
+                placeholder="Enter your name"
+                autocomplete="off"
+            >
+
+
+            <label for="name-color">
+                Name color
+            </label>
+
+            <input
+                id="name-color"
+                type="color"
+                value="#5cff5c"
+            >
+
+
+            <button id="enter-chat">
+                Enter Chat
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         Chat screen
+         ========================= -->
+
+    <div id="chat-screen">
+
+        <div id="chat-header">
+
+            <h1>ChatChafa</h1>
+
+            <div id="identity-display"></div>
+
+        </div>
+
+
+        <div id="chat">
+
+            <div class="message">
+
+                <span
+                    class="username"
+                    style="color: #5cff5c;"
+                >
+                    [ChatChafa]
+                </span>
+
+                Welcome to the chat!
+
+            </div>
+
+        </div>
+
+
+        <div class="input-area">
+
+            <input
+                id="message"
+                type="text"
+                placeholder="Say something..."
+                autocomplete="off"
+            >
+
+            <button id="send">
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        let username = "";
+        let nameColor = "";
+        let socket = null;
+
+        /*
+         * Enter Chat
+         */
+
+        document
+            .getElementById("enter-chat")
+            .addEventListener("click", enterChat);
+
+
+        document
+            .getElementById("username")
+            .addEventListener("keydown", function(event) {
+
+                if (event.key === "Enter") {
+                    enterChat();
+                }
+
+            });
+
+
+        function enterChat() {
+
+            const nameInput =
+                document.getElementById("username");
+
+            const colorInput =
+                document.getElementById("name-color");
+
+            username = nameInput.value.trim();
+
+            nameColor = colorInput.value;
+
+
+            if (username === "") {
+
+                nameInput.focus();
+
+                return;
+
+            }
+
+
+            /*
+             * Remember identity locally.
+             */
+
+            localStorage.setItem(
+                "chatChafaUsername",
+                username
+            );
+
+            localStorage.setItem(
+                "chatChafaColor",
+                nameColor
+            );
+
+            /*
+             *  Connect to Python
+             */
+
+            socket = new WebSocket(
+                "ws://" + window.location.hostname + ":8765"
+            );
+
+            socket.onopen = function() {
+                console.log("Connected to ChatChafa server");
+            };
+
+            socket.onclose = function() {
+                console.log("Disconnected from ChatChafa server");
+            };
+
+            socket.onerror = function(error) {
+                console.error("WebSocket error:", error);
+            };
+
+            socket.onmessage = function(event) {
+
+                const message =
+                    JSON.parse(event.data);
+
+                addMessage(
+                    message.user,
+                    message.color,
+                    message.text
+                );
+
+            };
+
+
+            /*
+             * Switch screens.
+             */
+
+            document
+                .getElementById("identity-screen")
+                .style.display = "none";
+
+            document
+                .getElementById("chat-screen")
+                .style.display = "block";
+
+
+            /*
+             * Show current identity.
+             */
+
+            const identity =
+                document.getElementById("identity-display");
+
+            identity.textContent =
+                username;
+
+            identity.style.color =
+                nameColor;
+
+
+            document
+                .getElementById("message")
+                .focus();
+
+        }
+
+
+        /*
+         * Send message.
+         */
+
+        document
+            .getElementById("send")
+            .addEventListener("click", sendMessage);
+
+
+        document
+            .getElementById("message")
+            .addEventListener("keydown", function(event) {
+
+                if (event.key === "Enter") {
+                    sendMessage();
+                }
+
+            });
+
+
+        function sendMessage() {
+
+            const input =
+                document.getElementById("message");
+
+            const text =
+                input.value.trim();
+
+
+            if (text === "") {
+                return;
+            }
+
+
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+
+                console.log("Not connected to server");
+
+                return;
+
+            }
+
+
+            const message = {
+
+                user: username,
+                color: nameColor,
+                text: text
+
+            };
+
+
+            socket.send(
+                JSON.stringify(message)
+            );
+
+
+            input.value = "";
+
+            input.focus();
+        }
+
+
+        /*
+         * Add a message to the chat.
+         */
+
+        function addMessage(
+            user,
+            color,
+            text
+        ) {
+
+            const chat =
+                document.getElementById("chat");
+
+
+            const message =
+                document.createElement("div");
+
+            message.classList.add("message");
+
+
+            const name =
+                document.createElement("span");
+
+            name.classList.add("username");
+
+            name.style.color = color;
+
+            name.textContent =
+                "[" + user + "]";
+
+
+            message.appendChild(name);
+
+            message.appendChild(
+                document.createTextNode(
+                    " " + text
+                )
+            );
+
+
+            chat.appendChild(message);
+
+
+            chat.scrollTop =
+                chat.scrollHeight;
+
+        }
+
+
+        /*
+         * Restore previous identity.
+         */
+
+        const savedUsername =
+            localStorage.getItem(
+                "chatChafaUsername"
+            );
+
+        const savedColor =
+            localStorage.getItem(
+                "chatChafaColor"
+            );
+
+
+        if (savedUsername) {
+
+            document
+                .getElementById("username")
+                .value = savedUsername;
+
+        }
+
+
+        if (savedColor) {
+
+            document
+                .getElementById("name-color")
+                .value = savedColor;
+
+        }
+
+    </script>
+
+</body>
+
+</html>
